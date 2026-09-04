@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اللعبة | خزانة المصادر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050505;
+    --bg-panel:#0d0d0c;
+    --ink:#f4f4ef;
+    --neon:#eeff2e;
+    --neon-dim:#8f9a1c;
+    --line:#232319;
+    --line-soft:#1a1a15;
+    --gray:#8a8a80;
+    --gray-light:#54544c;
+    --glow: 0 0 18px rgba(238,255,46,.45), 0 0 44px rgba(238,255,46,.12);
+    --serif:"Rajdhani", sans-serif;
+    --sans:"IBM Plex Sans Arabic", sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(238,255,46,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(238,255,46,0.035) 1px, transparent 1px);
+    background-size:44px 44px;
+    pointer-events:none;
+    z-index:0;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  }
+
+  ::selection{background:var(--neon);color:#0a0a0a;}
+  a{color:inherit;text-decoration:none;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:1;}
+
+  /* ===== Top bar ===== */
+  header.topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(5,5,5,0.82);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;height:76px;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:1px;
+    color:var(--neon);
+    text-shadow:0 0 14px rgba(238,255,46,.55);
+  }
+  .brand-sub{font-size:11px;color:var(--gray);letter-spacing:2px;}
+
+  nav.top-links{display:flex;align-items:center;gap:30px;}
+  nav.top-links a{font-size:14px;color:var(--ink);position:relative;padding:6px 0;transition:color .25s ease;}
+  nav.top-links a:not(.owner-btn)::after{
+    content:"";
+    position:absolute;right:0;left:0;bottom:0;height:1px;
+    background:var(--neon);
+    box-shadow:0 0 8px rgba(238,255,46,.7);
+    transform:scaleX(0);
+    transform-origin:right;
+    transition:transform .35s ease;
+  }
+  nav.top-links a:not(.owner-btn):hover{color:var(--neon);}
+  nav.top-links a:not(.owner-btn):hover::after{transform:scaleX(1);}
+
+  .owner-btn{
+    border:1px solid var(--neon);
+    color:var(--neon);
+    padding:9px 20px;
+    font-size:13.5px;
+    border-radius:2px;
+    transition:background .25s ease, color .25s ease, box-shadow .25s ease;
+  }
+  .owner-btn:hover{
+    background:var(--neon);
+    color:#0a0a0a;
+    box-shadow:var(--glow);
+  }
+
+  /* ===== Hero ===== */
+  .hero{padding:130px 0 100px;border-bottom:1px solid var(--line);position:relative;}
+  .hero-inner{display:grid;grid-template-columns:1.15fr 0.85fr;gap:60px;align-items:end;}
+  .hero-eyebrow{
+    font-size:13px;color:var(--neon-dim);margin-bottom:22px;max-width:360px;line-height:1.9;
+    letter-spacing:.5px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .pulse-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--neon);
+    box-shadow:0 0 10px rgba(238,255,46,.9);
+    animation:pulse 1.8s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;transform:scale(1);}
+    50%{opacity:.4;transform:scale(.7);}
+  }
+  h1.hero-title{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:66px;
+    line-height:1.1;
+    letter-spacing:.5px;
+  }
+  h1.hero-title em{
+    font-style:normal;
+    color:var(--neon);
+    text-shadow:0 0 22px rgba(238,255,46,.5), 0 0 60px rgba(238,255,46,.15);
+  }
+  .hero-right{border-right:1px solid var(--line);padding-right:34px;}
+  .hero-desc{font-size:16px;color:#c8c8c0;line-height:1.95;max-width:420px;}
+  .hero-desc strong{font-weight:600;color:var(--ink);}
+  .hero-cta-row{margin-top:34px;display:flex;gap:16px;flex-wrap:wrap;}
+
+  .btn-primary{
+    background:var(--neon);
+    color:#0a0a0a;
+    padding:14px 28px;
+    font-size:14.5px;
+    font-weight:600;
+    border-radius:2px;
+    display:inline-block;
+    transition:box-shadow .25s ease, transform .2s ease;
+    box-shadow:0 0 0 rgba(238,255,46,0);
+  }
+  .btn-primary:hover{
+    box-shadow:var(--glow);
+    transform:translateY(-1px);
+  }
+  .btn-ghost{
+    border:1px solid var(--line);
+    padding:14px 26px;
+    font-size:14.5px;
+    border-radius:2px;
+    color:var(--gray);
+    transition:border-color .25s ease, color .25s ease;
+  }
+  .btn-ghost:hover{border-color:var(--neon);color:var(--neon);}
+
+  /* ===== stats strip ===== */
+  .stats{border-bottom:1px solid var(--line);}
+  .stats-inner{display:grid;grid-template-columns:repeat(4,1fr);}
+  .stat{padding:30px 0;text-align:center;border-right:1px solid var(--line);transition:background .3s ease;}
+  .stat:hover{background:rgba(238,255,46,.03);}
+  .stat:first-child{border-right:none;}
+  .stat b{display:block;font-family:var(--serif);font-size:26px;font-weight:700;color:var(--neon);}
+  .stat span{font-size:12px;color:var(--gray);margin-top:4px;display:block;}
+
+  /* ===== Section heading ===== */
+  .section-heading{padding:100px 0 0;}
+  .section-heading .kicker{font-size:13px;color:var(--neon-dim);margin-bottom:14px;letter-spacing:.5px;}
+  .section-heading h2{font-family:var(--serif);font-weight:700;font-size:36px;max-width:600px;line-height:1.35;}
+  .section-heading p{margin-top:18px;color:var(--gray);font-size:15px;max-width:520px;line-height:1.85;}
+
+  .cats{
+    margin-top:56px;padding-bottom:110px;
+    display:grid;grid-template-columns:repeat(2,1fr);
+    border-top:1px solid var(--line);border-right:1px solid var(--line);
+  }
+  .cat{
+    padding:40px 34px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);
+    min-height:220px;display:flex;flex-direction:column;justify-content:space-between;
+    transition:background .3s ease, box-shadow .3s ease;position:relative;overflow:hidden;
+  }
+  .cat::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(135deg, rgba(238,255,46,.06), transparent 60%);
+    opacity:0;transition:opacity .3s ease;
+  }
+  .cat:hover::before{opacity:1;}
+  .cat:hover{box-shadow:inset 0 0 40px rgba(238,255,46,.05);}
+  .cat-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .cat-index{font-family:var(--serif);font-size:14px;color:var(--gray-light);}
+  .cat-lock{font-size:11px;color:var(--neon-dim);border:1px solid var(--line);padding:4px 9px;border-radius:20px;}
+  .cat h3{font-size:19px;font-weight:600;margin-top:26px;}
+  .cat p{font-size:13.5px;color:var(--gray);margin-top:10px;line-height:1.8;}
+  .cat-empty{background:var(--bg-panel);}
+  .cat-empty:hover::before{opacity:0;}
+  .cat-empty-title{color:var(--gray);font-weight:500;}
+
+  /* ===== How it works ===== */
+  .how{padding:110px 0;border-top:1px solid var(--line);background:var(--bg-panel);}
+  .how-inner{display:grid;grid-template-columns:0.8fr 1.2fr;gap:70px;}
+  .how h2{font-family:var(--serif);font-weight:700;font-size:32px;line-height:1.3;max-width:320px;}
+  .steps{display:flex;flex-direction:column;}
+  .step{display:grid;grid-template-columns:50px 1fr;gap:22px;padding:26px 0;border-bottom:1px solid var(--line);transition:padding-right .25s ease;}
+  .step:hover{padding-right:8px;}
+  .step:first-child{padding-top:0;}
+  .step:last-child{border-bottom:none;}
+  .step-num{font-family:var(--serif);font-weight:700;font-size:20px;color:var(--neon);}
+  .step h4{font-size:16px;font-weight:600;margin-bottom:8px;}
+  .step p{font-size:14px;color:var(--gray);line-height:1.85;max-width:480px;}
+
+  /* ===== Members CTA band ===== */
+  .members-band{border-top:1px solid var(--line);padding:90px 0;text-align:center;}
+  .members-band .kicker{font-size:13px;color:var(--neon-dim);margin-bottom:16px;letter-spacing:.5px;}
+  .members-band h2{font-family:var(--serif);font-weight:700;font-size:32px;margin-bottom:16px;}
+  .members-band p{color:var(--gray);font-size:14.5px;max-width:460px;margin:0 auto 30px;line-height:1.85;}
+
+  /* ===== Footer ===== */
+  footer{padding:70px 0 40px;border-top:1px solid var(--line);}
+  .footer-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:50px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:30px;}
+  .footer-brand{font-family:var(--serif);font-weight:700;font-size:20px;color:var(--neon);}
+  .footer-note{font-size:13px;color:var(--gray);max-width:340px;margin-top:12px;line-height:1.8;}
+  .footer-links{display:flex;gap:50px;}
+  .footer-col h5{font-size:12px;color:var(--gray);margin-bottom:14px;font-weight:500;letter-spacing:.5px;}
+  .footer-col a{display:block;font-size:14px;margin-bottom:10px;color:var(--ink);transition:color .2s ease;}
+  .footer-col a:hover{color:var(--neon);}
+  .footer-bottom{display:flex;justify-content:space-between;padding-top:24px;font-size:12px;color:var(--gray-light);flex-wrap:wrap;gap:10px;}
+
+  @media (max-width:860px){
+    .hero-inner{grid-template-columns:1fr;gap:36px;}
+    .hero-right{border-right:none;padding-right:0;border-top:1px solid var(--line);padding-top:26px;}
+    h1.hero-title{font-size:42px;}
+    .stats-inner{grid-template-columns:repeat(2,1fr);}
+    .stat:nth-child(3){border-right:none;}
+    .cats{grid-template-columns:1fr;}
+    .how-inner{grid-template-columns:1fr;gap:40px;}
+    nav.top-links{gap:16px;}
+    nav.top-links a:not(.owner-btn){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">اللعبة</span>
+      <span class="brand-sub">THE GAME</span>
+    </div>
+    <nav class="top-links">
+      <a href="#sections">الأقسام</a>
+      <a href="members.html">منشورات الأعضاء</a>
+      <a href="#how">كيف يعمل</a>
+      <a href="login.html" class="owner-btn">دخول المالكين</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <div class="hero-eyebrow"><span class="pulse-dot"></span>خزانة مصادر مغلقة — لا تُفتح إلا لمن يملك المفتاح</div>
+      <h1 class="hero-title">مكتبة مصادر <em>مرتّبة</em>،<br>محفوظة لأصحابها فقط.</h1>
+    </div>
+    <div class="hero-right">
+      <p class="hero-desc">
+        <strong>اللعبة</strong> مساحة واحدة تُجمع فيها المصادر — ملفات، صور، فيديوهات — وتُصنّف داخل أقسام واضحة مثل <strong>الكاريزما</strong>. المحتوى الكامل يظهر حصريًا للمالكين المسجّلين، وما يُختار مشاركته يصل للأعضاء والمتابعين.
+      </p>
+      <div class="hero-cta-row">
+        <a href="#sections" class="btn-primary">استعراض الأقسام</a>
+        <a href="members.html" class="btn-ghost">منشورات الأعضاء</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="wrap stats-inner">
+    <div class="stat"><b>خاص</b><span>وصول مقفل بكلمة مرور</span></div>
+    <div class="stat"><b>مصنّف</b><span>أقسام وفرز للمصادر</span></div>
+    <div class="stat"><b>متعدد</b><span>ملفات · صور · فيديو</span></div>
+    <div class="stat"><b>مباشر</b><span>نشر عام إلى تيليجرام</span></div>
+  </div>
+</section>
+
+<section class="section-heading wrap" id="sections">
+  <div class="kicker">الأقسام</div>
+  <h2>كل قسم بيت لنوع واحد من المصادر</h2>
+  <p>هذه معاينة للأقسام المتاحة داخل الموقع. المحتوى الكامل لكل قسم يظهر بعد تسجيل دخول المالك.</p>
+</section>
+
+<div class="wrap">
+  <div class="cats">
+    <div class="cat">
+      <div class="cat-top"><span class="cat-index">01</span><span class="cat-lock">مقفل</span></div>
+      <div>
+        <h3>الكاريزما</h3>
+        <p>مصادر الإغواء وبناء الحضور الشخصي.</p>
+      </div>
+    </div>
+    <div class="cat cat-empty">
+      <div class="cat-top"><span class="cat-index">—</span></div>
+      <div>
+        <h3 class="cat-empty-title">لا أقسام أخرى بعد</h3>
+        <p>الأقسام تظهر هنا فور إضافتها من لوحة المالكين.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="how" id="how">
+  <div class="wrap how-inner">
+    <h2>كيف يعمل الموقع</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <div>
+          <h4>تسجيل دخول المالكين</h4>
+          <p>اسم مستخدم وكلمة مرور خاصة تفتح لوحة تحكم كاملة بكل الأقسام والمصادر.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <div>
+          <h4>إضافة وفرز المصادر</h4>
+          <p>رفع ملفات أو صور أو فيديوهات وتوزيعها على الأقسام المناسبة.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <div>
+          <h4>نشر عام</h4>
+          <p>زر واحد يرسل الصورة أو النص إلى كروب تيليجرام الخاص بالموقع، ويثبّت الرسالة تلقائيًا، وينشرها في صفحة الأعضاء.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="members-band wrap">
+  <div class="kicker">مفتوح للجميع</div>
+  <h2>تابع كل ما يُنشر للأعضاء</h2>
+  <p>منشورات مختارة يشاركها المالكون مع الزوار والمتابعين — بدون الحاجة لأي تسجيل دخول.</p>
+  <a href="members.html" class="btn-primary">فتح منشورات الأعضاء</a>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">اللعبة</div>
+        <p class="footer-note">خزانة مصادر خاصة، مبنية للمالكين أولًا، ومفتوحة جزئيًا للأعضاء عبر النشر العام.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>الموقع</h5>
+          <a href="#sections">الأقسام</a>
+          <a href="members.html">منشورات الأعضاء</a>
+          <a href="#how">كيف يعمل</a>
+        </div>
+        <div class="footer-col">
+          <h5>الوصول</h5>
+          <a href="login.html">دخول المالكين</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>اللعبة © 2026</span>
+      <span>THE GAME</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
