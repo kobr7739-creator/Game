@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منشورات الأعضاء | اللعبة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#050505;
+    --bg-panel:#0d0d0c;
+    --ink:#f4f4ef;
+    --neon:#eeff2e;
+    --neon-dim:#8f9a1c;
+    --line:#232319;
+    --gray:#8a8a80;
+    --gray-light:#54544c;
+    --glow: 0 0 18px rgba(238,255,46,.45), 0 0 44px rgba(238,255,46,.12);
+    --serif:"Rajdhani", sans-serif;
+    --sans:"IBM Plex Sans Arabic", sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;position:relative;overflow-x:hidden;}
+  body::before{
+    content:"";position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(238,255,46,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(238,255,46,0.035) 1px, transparent 1px);
+    background-size:44px 44px;pointer-events:none;z-index:0;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--neon);color:#0a0a0a;}
+  .wrap{max-width:900px;margin:0 auto;padding:0 32px;position:relative;z-index:1;}
+
+  header.topbar{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(5,5,5,.85);backdrop-filter:blur(12px);z-index:40;}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;height:76px;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--neon);text-shadow:0 0 14px rgba(238,255,46,.5);}
+  .brand-sub{font-size:11px;color:var(--gray);letter-spacing:2px;}
+  .back-link{font-size:14px;color:var(--gray);transition:color .2s ease;}
+  .back-link:hover{color:var(--neon);}
+
+  .page-head{padding:56px 0 36px;border-bottom:1px solid var(--line);}
+  .page-head .kicker{font-size:13px;color:var(--neon-dim);margin-bottom:12px;letter-spacing:.5px;}
+  .page-head h1{font-family:var(--serif);font-weight:700;font-size:34px;}
+
+  .posts{padding:50px 0 100px;}
+  .post{padding:32px;border:1px solid var(--line);border-radius:2px;margin-bottom:22px;background:var(--bg-panel);transition:box-shadow .3s ease, border-color .3s ease;}
+  .post:hover{border-color:var(--neon-dim);box-shadow:0 0 30px rgba(238,255,46,.06);}
+  .post-date{font-size:12px;color:var(--gray-light);margin-bottom:14px;letter-spacing:.3px;}
+  .post-text{font-size:16px;color:#e8e8e0;line-height:1.9;white-space:pre-wrap;margin-bottom:18px;}
+  .post-image{width:100%;max-height:520px;object-fit:cover;border:1px solid var(--line);border-radius:2px;}
+
+  .empty-state{padding:100px 0;text-align:center;color:var(--gray);font-size:14.5px;}
+  .loading-state{padding:100px 0;text-align:center;color:var(--gray-light);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">اللعبة</span>
+      <span class="brand-sub">THE GAME</span>
+    </div>
+    <a href="index.html" class="back-link">← العودة للرئيسية</a>
+  </div>
+</header>
+
+<div class="page-head wrap">
+  <div class="kicker">مفتوح للجميع</div>
+  <h1>منشورات الأعضاء</h1>
+</div>
+
+<div class="wrap posts" id="posts-container">
+  <div class="loading-state">جاري التحميل...</div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://qwfosdzvcfdivuyfaaei.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_tNmdJfjYuTLjk62RsgPZlQ_na1L432H";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function loadPosts(){
+    const container = document.getElementById("posts-container");
+    const { data, error } = await supabaseClient
+      .from("public_posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error){
+      container.innerHTML = '<div class="empty-state">تعذّر تحميل المنشورات حاليًا.</div>';
+      console.error(error);
+      return;
+    }
+    if (!data || data.length === 0){
+      container.innerHTML = '<div class="empty-state">لا توجد منشورات بعد.</div>';
+      return;
+    }
+    container.innerHTML = "";
+    data.forEach(post => {
+      const date = new Date(post.created_at).toLocaleDateString("ar-EG", { day:"numeric", month:"long", year:"numeric" });
+      const el = document.createElement("div");
+      el.className = "post";
+      el.innerHTML = `
+        <div class="post-date">${date}</div>
+        ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ""}
+        ${post.image_url ? `<img class="post-image" src="${post.image_url}" alt="">` : ""}
+      `;
+      container.appendChild(el);
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+  }
+
+  loadPosts();
+</script>
+
+</body>
+</html>
