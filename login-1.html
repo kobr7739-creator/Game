@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دخول المالكين | اللعبة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#050505;
+    --bg-panel:#0d0d0c;
+    --ink:#f4f4ef;
+    --neon:#eeff2e;
+    --neon-dim:#8f9a1c;
+    --line:#232319;
+    --line-soft:#1a1a15;
+    --gray:#8a8a80;
+    --gray-light:#54544c;
+    --error:#ff5c5c;
+    --glow: 0 0 18px rgba(238,255,46,.45), 0 0 44px rgba(238,255,46,.12);
+    --serif:"Rajdhani", sans-serif;
+    --sans:"IBM Plex Sans Arabic", sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(238,255,46,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(238,255,46,0.035) 1px, transparent 1px);
+    background-size:44px 44px;
+    pointer-events:none;z-index:0;
+    mask-image:radial-gradient(ellipse 70% 60% at 50% 20%, black 30%, transparent 90%);
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--neon);color:#0a0a0a;}
+
+  header.topbar{border-bottom:1px solid var(--line);position:relative;z-index:1;}
+  .topbar-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:76px;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--neon);text-shadow:0 0 14px rgba(238,255,46,.5);}
+  .brand-sub{font-size:11px;color:var(--gray);letter-spacing:2px;}
+  .back-link{font-size:14px;color:var(--gray);transition:color .2s ease;}
+  .back-link:hover{color:var(--neon);}
+
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 24px;position:relative;z-index:1;}
+
+  .login-box{width:100%;max-width:400px;}
+  .login-eyebrow{font-size:12.5px;color:var(--neon-dim);margin-bottom:14px;letter-spacing:.5px;}
+  .login-box h1{font-family:var(--serif);font-weight:700;font-size:32px;margin-bottom:10px;}
+  .login-box p.sub{font-size:14px;color:var(--gray);margin-bottom:40px;line-height:1.8;}
+
+  .field{margin-bottom:22px;}
+  .field label{display:block;font-size:12.5px;color:var(--gray);margin-bottom:8px;}
+  .field input{
+    width:100%;border:none;border-bottom:1px solid var(--line);
+    padding:10px 2px;font-size:16px;font-family:var(--sans);
+    background:transparent;color:var(--ink);outline:none;
+    transition:border-color .25s ease, box-shadow .25s ease;
+  }
+  .field input:focus{border-bottom-color:var(--neon);box-shadow:0 1px 0 0 rgba(238,255,46,.4);}
+
+  .submit-row{margin-top:36px;}
+  button.btn-primary{
+    width:100%;background:var(--neon);color:#0a0a0a;
+    padding:14px 26px;font-size:15px;font-weight:600;border:none;border-radius:2px;
+    cursor:pointer;font-family:var(--sans);
+    transition:box-shadow .25s ease, transform .2s ease;
+  }
+  button.btn-primary:hover{box-shadow:var(--glow);transform:translateY(-1px);}
+  button.btn-primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none;}
+
+  .msg{margin-top:20px;font-size:13.5px;line-height:1.8;display:none;}
+  .msg.show{display:block;}
+  .msg.error{color:var(--error);}
+  .msg.info{color:var(--gray);}
+
+  .foot-note{margin-top:50px;padding-top:26px;border-top:1px solid var(--line);font-size:12.5px;color:var(--gray-light);line-height:1.9;}
+
+  footer.site-footer{border-top:1px solid var(--line);padding:26px 0;position:relative;z-index:1;}
+  .site-footer .topbar-inner{height:auto;font-size:12px;color:var(--gray-light);}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">اللعبة</span>
+      <span class="brand-sub">THE GAME</span>
+    </div>
+    <a href="index.html" class="back-link">← العودة للموقع</a>
+  </div>
+</header>
+
+<main>
+  <div class="login-box">
+    <div class="login-eyebrow">وصول مقفل</div>
+    <h1>دخول المالكين</h1>
+    <p class="sub">هذه الصفحة مخصصة للمالكين المسجّلين فقط. لا يوجد إنشاء حساب جديد — الحسابات تُضاف يدويًا من إدارة الموقع.</p>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="email">البريد الإلكتروني</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+      </div>
+      <div class="submit-row">
+        <button type="submit" class="btn-primary" id="submit-btn">دخول</button>
+      </div>
+      <div class="msg" id="msg"></div>
+    </form>
+
+    <div class="foot-note">
+      إذا نسيت بيانات دخولك أو تحتاج حسابًا جديدًا، تواصل مع إدارة الموقع مباشرة.
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="topbar-inner">
+    <span>اللعبة © 2026</span>
+    <span>THE GAME</span>
+  </div>
+</footer>
+
+<script>
+  const SUPABASE_URL = "https://qwfosdzvcfdivuyfaaei.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_tNmdJfjYuTLjk62RsgPZlQ_na1L432H";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const form = document.getElementById("login-form");
+  const msgBox = document.getElementById("msg");
+  const submitBtn = document.getElementById("submit-btn");
+
+  function showMsg(text, type){
+    msgBox.textContent = text;
+    msgBox.className = "msg show " + type;
+  }
+
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) {
+      window.location.href = "dashboard.html";
+    }
+  })();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = "جاري التحقق...";
+    msgBox.className = "msg";
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "دخول";
+      showMsg("بيانات الدخول غير صحيحة، أو هذا الحساب غير مسجّل كمالك.", "error");
+      return;
+    }
+
+    showMsg("تم التحقق، جاري تحويلك...", "info");
+    window.location.href = "dashboard.html";
+  });
+</script>
+
+</body>
+</html>
