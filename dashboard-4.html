@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المالكين | اللعبة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#f4f4ef;
+    --paper:#050505;
+    --paper-dim:#0d0d0c;
+    --neon:#eeff2e;
+    --neon-dim:#8f9a1c;
+    --line:#232319;
+    --line-soft:#1a1a15;
+    --gray:#8a8a80;
+    --gray-light:#54544c;
+    --error:#ff5c5c;
+    --ok:#7bffb0;
+    --glow: 0 0 18px rgba(238,255,46,.45), 0 0 44px rgba(238,255,46,.12);
+    --serif:"Rajdhani", sans-serif;
+    --sans:"IBM Plex Sans Arabic", sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(238,255,46,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(238,255,46,0.03) 1px, transparent 1px);
+    background-size:44px 44px;
+    pointer-events:none;z-index:0;
+  }
+  .wrap, header, #app > *, main, aside{position:relative;z-index:1;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:var(--sans);cursor:pointer;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+
+  /* ===== Top bar ===== */
+  header.topbar{border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:rgba(5,5,5,.85);backdrop-filter:blur(10px);z-index:40;}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;height:76px;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand-mark{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--neon);text-shadow:0 0 14px rgba(238,255,46,.5);}
+  .brand-sub{font-size:11px;color:var(--gray);letter-spacing:1px;}
+  .topbar-right{display:flex;align-items:center;gap:22px;}
+  .who{font-size:13px;color:var(--gray);}
+  .logout-btn{
+    border:1px solid var(--line-soft);
+    padding:9px 18px;
+    font-size:13px;
+    border-radius:2px;
+    background:transparent;
+    color:var(--ink);
+    transition:border-color .2s ease;
+  }
+  .logout-btn:hover{border-color:var(--neon);}
+
+  /* ===== Auth gate ===== */
+  #gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    color:var(--gray);
+  }
+  #app{display:none;}
+
+  /* ===== Page head ===== */
+  .page-head{padding:56px 0 36px;border-bottom:1px solid var(--line-soft);}
+  .page-head .kicker{font-size:13px;color:var(--gray);margin-bottom:12px;}
+  .page-head h1{font-family:var(--serif);font-weight:600;font-size:36px;}
+
+  /* ===== Layout ===== */
+  .board{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:0;
+  }
+  .side{
+    border-left:1px solid var(--line-soft);
+    padding:40px 30px 40px 0;
+    min-height:60vh;
+  }
+  .side h3{font-size:13px;color:var(--gray);margin-bottom:16px;}
+
+  .add-section-form{display:flex;gap:8px;margin-bottom:30px;}
+  .add-section-form input{
+    flex:1;
+    border:none;
+    border-bottom:1px solid var(--line-soft);
+    padding:8px 2px;
+    font-size:14px;
+    background:transparent;
+    outline:none;
+    font-family:var(--sans);
+  }
+  .add-section-form input:focus{border-bottom-color:var(--neon);}
+  .add-section-form button{
+    border:1px solid var(--neon);
+    background:var(--neon);
+    color:var(--paper);
+    padding:0 16px;
+    font-size:13px;
+    border-radius:2px;
+  }
+
+  .section-list{list-style:none;}
+  .section-list li{
+    padding:11px 0;
+    border-bottom:1px solid var(--line-soft);
+    font-size:14.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    color:var(--gray);
+    transition:color .2s ease;
+  }
+  .section-list li .sec-right{display:flex;align-items:center;gap:6px;}
+  .mini-btn{
+    border:1px solid var(--line-soft);
+    background:transparent;
+    color:var(--gray);
+    font-size:11px;
+    width:22px;
+    height:22px;
+    border-radius:2px;
+    line-height:1;
+    padding:0;
+    opacity:1;
+    transition:border-color .2s ease, color .2s ease;
+  }
+  .mini-btn:hover{border-color:var(--neon);color:var(--neon);}
+  .section-list li:hover{color:var(--neon);}
+  .section-list li.active{color:var(--neon);font-weight:600;text-shadow:0 0 10px rgba(238,255,46,.4);}
+  .section-list li span.count{
+    font-size:12px;
+    color:var(--gray-light);
+    font-weight:400;
+  }
+
+  .main-col{padding:40px 0 100px 34px;}
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .toolbar h2{font-family:var(--serif);font-weight:600;font-size:24px;}
+  .sort-select{
+    border:1px solid var(--line-soft);
+    padding:9px 14px;
+    font-size:13px;
+    border-radius:2px;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+  }
+
+  .add-resource-box{
+    border:1px solid var(--line-soft);
+    padding:26px;
+    margin-bottom:44px;
+    border-radius:2px;
+  }
+  .add-resource-box h3{font-size:14px;margin-bottom:20px;}
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:18px;
+  }
+  .field label{display:block;font-size:12.5px;color:var(--gray);margin-bottom:7px;}
+  .field input[type=text], .field select{
+    width:100%;
+    border:none;
+    border-bottom:1px solid var(--line-soft);
+    padding:9px 2px;
+    font-size:14.5px;
+    background:transparent;
+    outline:none;
+    font-family:var(--sans);
+    color:var(--ink);
+  }
+  .field input[type=text]:focus, .field select:focus{border-bottom-color:var(--neon);}
+  .field textarea{
+    width:100%;
+    border:1px solid var(--line-soft);
+    padding:11px;
+    font-family:var(--sans);
+    font-size:14.5px;
+    outline:none;
+    resize:vertical;
+    border-radius:2px;
+    color:var(--ink);
+  }
+  .field textarea:focus{border-color:var(--neon);}
+  .field input[type=file]{
+    width:100%;
+    font-size:13px;
+    font-family:var(--sans);
+    padding:8px 0;
+  }
+  .full-row{grid-column:1 / -1;}
+
+  .submit-resource-btn{
+    background:var(--neon);
+    color:#0a0a0a;
+    border:none;
+    padding:12px 24px;
+    font-size:14px;
+    border-radius:2px;
+  }
+  .submit-resource-btn:hover{box-shadow:var(--glow);}
+  .submit-resource-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  .form-msg{margin-top:14px;font-size:13px;display:none;}
+  .form-msg.show{display:block;}
+  .form-msg.error{color:var(--error);}
+  .form-msg.ok{color:var(--ok);}
+  .form-msg.info{color:var(--gray);}
+
+  .published-posts-list{margin-top:26px;border-top:1px solid var(--line-soft);padding-top:20px;}
+  .published-posts-list h4{font-size:12.5px;color:var(--gray);margin-bottom:14px;font-weight:500;}
+  .pub-post-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    padding:12px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .pub-post-text{font-size:13.5px;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pub-post-date{font-size:11.5px;color:var(--gray-light);flex-shrink:0;}
+  .pub-post-row button{
+    font-size:12px;
+    border:1px solid var(--line-soft);
+    background:transparent;
+    padding:6px 12px;
+    border-radius:2px;
+    color:var(--ink);
+    flex-shrink:0;
+    transition:border-color .2s ease;
+  }
+  .pub-post-row button:hover{border-color:var(--neon);color:var(--neon);}
+  .pub-empty{font-size:13px;color:var(--gray-light);padding:8px 0;}
+
+  /* ===== Resource rows ===== */
+  .res-list{border-top:1px solid var(--line);}
+  .res-row{
+    display:grid;
+    grid-template-columns:70px 1fr 130px 120px 280px;
+    align-items:center;
+    padding:18px 0;
+    border-bottom:1px solid var(--line-soft);
+    gap:12px;
+  }
+  .res-type-badge{
+    font-size:11px;
+    color:var(--gray);
+    border:1px solid var(--line-soft);
+    padding:4px 8px;
+    border-radius:20px;
+    text-align:center;
+    width:fit-content;
+  }
+  .res-title{font-size:15px;font-weight:500;}
+  .res-section-name{font-size:12.5px;color:var(--gray);}
+  .res-date{font-size:12.5px;color:var(--gray-light);}
+  .res-actions{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;}
+  .res-actions button{
+    font-size:12.5px;
+    border:1px solid var(--line-soft);
+    background:transparent;
+    padding:7px 12px;
+    border-radius:2px;
+    color:var(--ink);
+    transition:border-color .2s ease;
+  }
+  .res-actions button:hover{border-color:var(--neon);}
+  .res-actions button.publish-btn{
+    border-color:var(--neon);
+  }
+
+  .empty-state{
+    padding:60px 0;
+    text-align:center;
+    color:var(--gray);
+    font-size:14px;
+  }
+
+  @media (max-width:900px){
+    .board{grid-template-columns:1fr;}
+    .side{border-left:none;border-bottom:1px solid var(--line-soft);padding:30px 0;}
+    .main-col{padding:30px 0 80px;}
+    .form-grid{grid-template-columns:1fr;}
+    .res-row{grid-template-columns:1fr;gap:6px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">جاري التحقق من الدخول...</div>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">اللعبة</span>
+        <span class="brand-sub">لوحة المالكين</span>
+      </div>
+      <div class="topbar-right">
+        <span class="who" id="who-label"></span>
+        <button class="logout-btn" id="logout-btn">تسجيل الخروج</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-head wrap">
+    <div class="kicker">إدارة الأقسام والمصادر</div>
+    <h1>لوحة التحكم</h1>
+  </div>
+
+  <div class="wrap board">
+
+    <aside class="side">
+      <h3>إضافة قسم جديد</h3>
+      <form class="add-section-form" id="add-section-form">
+        <input type="text" id="new-section-name" placeholder="اسم القسم" required>
+        <button type="submit">إضافة</button>
+      </form>
+
+      <h3>الأقسام</h3>
+      <ul class="section-list" id="section-list">
+        <li class="active" data-id="all">الكل <span class="count" id="count-all">0</span></li>
+      </ul>
+    </aside>
+
+    <main class="main-col">
+      <div class="toolbar">
+        <h2 id="current-section-title">كل المصادر</h2>
+        <select class="sort-select" id="sort-select">
+          <option value="new">الأحدث أولًا</option>
+          <option value="old">الأقدم أولًا</option>
+          <option value="title">حسب العنوان</option>
+        </select>
+      </div>
+
+      <div class="add-resource-box" id="publish-box">
+        <h3>نشر عام للأعضاء (تيليجرام)</h3>
+        <div class="field full-row" style="margin-bottom:16px;">
+          <label for="publish-text">النص</label>
+          <textarea id="publish-text" rows="3" placeholder="اكتب ما تريد نشره في كروب تيليجرام..."></textarea>
+        </div>
+        <div class="field full-row" style="margin-bottom:18px;">
+          <label for="publish-image">صورة (اختياري)</label>
+          <input type="file" id="publish-image" accept="image/*">
+        </div>
+        <button type="button" class="submit-resource-btn" id="publish-btn">نشر وتثبيت في تيليجرام</button>
+        <div class="form-msg" id="publish-msg"></div>
+
+        <div class="published-posts-list" id="published-posts-list">
+          <!-- تُملأ عبر JS -->
+        </div>
+      </div>
+
+      <div class="add-resource-box">
+        <h3>إضافة مصدر جديد</h3>
+        <form id="add-resource-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="res-title">عنوان المصدر</label>
+              <input type="text" id="res-title" required>
+            </div>
+            <div class="field">
+              <label for="res-section">القسم</label>
+              <select id="res-section" required></select>
+            </div>
+            <div class="field">
+              <label for="res-type">النوع</label>
+              <select id="res-type" required>
+                <option value="file">ملف</option>
+                <option value="image">صورة</option>
+                <option value="video">فيديو</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="res-file">الملف</label>
+              <input type="file" id="res-file" required>
+            </div>
+          </div>
+          <button type="submit" class="submit-resource-btn" id="add-resource-btn">إضافة المصدر</button>
+          <div class="form-msg" id="add-resource-msg"></div>
+        </form>
+      </div>
+
+      <div class="res-list" id="res-list">
+        <!-- تُملأ عبر JS -->
+      </div>
+      <div class="empty-state" id="empty-state" style="display:none;">لا توجد مصادر مضافة في هذا القسم بعد.</div>
+    </main>
+
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://qwfosdzvcfdivuyfaaei.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_tNmdJfjYuTLjk62RsgPZlQ_na1L432H";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let sections = [];
+  let resources = [];
+  let activeSectionId = "all";
+  let sortMode = "new";
+
+  const gateEl = document.getElementById("gate");
+  const appEl = document.getElementById("app");
+  const whoLabel = document.getElementById("who-label");
+
+  // ===== حماية الصفحة: تحقق من تسجيل الدخول =====
+  async function checkAuth(){
+    const { data } = await supabaseClient.auth.getSession();
+    if (!data.session) {
+      window.location.href = "login.html";
+      return;
+    }
+    whoLabel.textContent = data.session.user.email;
+    gateEl.style.display = "none";
+    appEl.style.display = "block";
+    await loadSections();
+    await loadResources();
+    await loadPublishedPosts();
+  }
+  checkAuth();
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+  });
+
+  // ===== تحميل الأقسام =====
+  async function loadSections(){
+    const { data, error } = await supabaseClient
+      .from("sections")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (error) { console.error(error); return; }
+    sections = data || [];
+    renderSectionList();
+    renderSectionSelect();
+  }
+
+  function renderSectionList(){
+    const list = document.getElementById("section-list");
+    list.innerHTML = "";
+
+    const allLi = document.createElement("li");
+    allLi.dataset.id = "all";
+    allLi.className = activeSectionId === "all" ? "active" : "";
+    allLi.innerHTML = `الكل <span class="count">${resources.length}</span>`;
+    allLi.addEventListener("click", () => setActiveSection("all"));
+    list.appendChild(allLi);
+
+    sections.forEach(sec => {
+      const count = resources.filter(r => r.section_id === sec.id).length;
+      const li = document.createElement("li");
+      li.dataset.id = sec.id;
+      li.className = activeSectionId === sec.id ? "active" : "";
+      li.innerHTML = `
+        <span class="sec-label">${escapeHtml(sec.name)}</span>
+        <span class="sec-right">
+          <span class="count">${count}</span>
+          <button class="mini-btn" data-sec-action="edit" data-id="${sec.id}" data-name="${escapeHtml(sec.name)}" title="تعديل الاسم">✎</button>
+          <button class="mini-btn" data-sec-action="delete" data-id="${sec.id}" title="حذف القسم">✕</button>
+        </span>
+      `;
+      li.querySelector(".sec-label").addEventListener("click", () => setActiveSection(sec.id));
+      li.querySelector(".count").addEventListener("click", () => setActiveSection(sec.id));
+      list.appendChild(li);
+    });
+
+    list.querySelectorAll('button[data-sec-action="edit"]').forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const currentName = btn.dataset.name;
+        const newName = prompt("الاسم الجديد للقسم:", currentName);
+        if (!newName || !newName.trim() || newName.trim() === currentName) return;
+        const { error } = await supabaseClient.from("sections").update({ name: newName.trim() }).eq("id", id);
+        if (error) { alert("تعذّر تعديل اسم القسم."); console.error(error); return; }
+        await loadSections();
+        await loadResources();
+      });
+    });
+
+    list.querySelectorAll('button[data-sec-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const count = resources.filter(r => r.section_id === id).length;
+        const warning = count > 0
+          ? `سيتم حذف هذا القسم مع ${count} مصدر بداخله نهائيًا. متابعة؟`
+          : "حذف هذا القسم نهائيًا؟";
+        if (!confirm(warning)) return;
+        const { error } = await supabaseClient.from("sections").delete().eq("id", id);
+        if (error) { alert("تعذّر حذف القسم."); console.error(error); return; }
+        if (activeSectionId === id) activeSectionId = "all";
+        await loadSections();
+        await loadResources();
+      });
+    });
+  }
+
+  function renderSectionSelect(){
+    const select = document.getElementById("res-section");
+    select.innerHTML = "";
+    if (sections.length === 0){
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "أضف قسمًا أولًا";
+      select.appendChild(opt);
+      return;
+    }
+    sections.forEach(sec => {
+      const opt = document.createElement("option");
+      opt.value = sec.id;
+      opt.textContent = sec.name;
+      select.appendChild(opt);
+    });
+  }
+
+  function setActiveSection(id){
+    activeSectionId = id;
+    const title = id === "all" ? "كل المصادر" : (sections.find(s => s.id === id)?.name || "");
+    document.getElementById("current-section-title").textContent = title;
+    renderSectionList();
+    renderResources();
+  }
+
+  // ===== إضافة قسم =====
+  document.getElementById("add-section-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById("new-section-name");
+    const name = nameInput.value.trim();
+    if (!name) return;
+    const { error } = await supabaseClient.from("sections").insert({ name });
+    if (error) { alert("تعذّرت إضافة القسم."); console.error(error); return; }
+    nameInput.value = "";
+    await loadSections();
+  });
+
+  // ===== تحميل المصادر =====
+  async function loadResources(){
+    const { data, error } = await supabaseClient
+      .from("resources")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) { console.error(error); return; }
+    resources = data || [];
+    renderSectionList();
+    renderResources();
+  }
+
+  document.getElementById("sort-select").addEventListener("change", (e) => {
+    sortMode = e.target.value;
+    renderResources();
+  });
+
+  function renderResources(){
+    let list = activeSectionId === "all"
+      ? [...resources]
+      : resources.filter(r => r.section_id === activeSectionId);
+
+    if (sortMode === "new") list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    if (sortMode === "old") list.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    if (sortMode === "title") list.sort((a,b) => a.title.localeCompare(b.title, "ar"));
+
+    const container = document.getElementById("res-list");
+    const emptyState = document.getElementById("empty-state");
+    container.innerHTML = "";
+
+    if (list.length === 0){
+      emptyState.style.display = "block";
+      return;
+    }
+    emptyState.style.display = "none";
+
+    const typeLabels = { file: "ملف", image: "صورة", video: "فيديو" };
+
+    list.forEach(r => {
+      const secName = sections.find(s => s.id === r.section_id)?.name || "—";
+      const date = new Date(r.created_at).toLocaleDateString("ar-EG", { day:"numeric", month:"short", year:"numeric" });
+
+      const row = document.createElement("div");
+      row.className = "res-row";
+      row.innerHTML = `
+        <span class="res-type-badge">${typeLabels[r.type] || r.type}</span>
+        <span class="res-title">${escapeHtml(r.title)}</span>
+        <span class="res-section-name">${escapeHtml(secName)}</span>
+        <span class="res-date">${date}</span>
+        <span class="res-actions">
+          <button data-action="view" data-path="${r.file_url}">فتح الملف</button>
+          <button data-action="publish" data-title="${escapeHtml(r.title)}" data-path="${r.file_url}" data-type="${r.type}" class="publish-btn">نشر عام</button>
+          <button data-action="rename" data-id="${r.id}" data-title="${escapeHtml(r.title)}">تعديل</button>
+          <button data-action="delete" data-id="${r.id}" data-path="${r.file_url}">حذف</button>
+        </span>
+      `;
+      container.appendChild(row);
+    });
+
+    container.querySelectorAll('button[data-action="view"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const path = btn.dataset.path;
+        const { data, error } = await supabaseClient.storage.from("resources").createSignedUrl(path, 60);
+        if (error) { alert("تعذّر فتح الملف."); console.error(error); return; }
+        window.open(data.signedUrl, "_blank");
+      });
+    });
+
+    container.querySelectorAll('button[data-action="publish"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const title = btn.dataset.title;
+        const path = btn.dataset.path;
+        const type = btn.dataset.type;
+        const publishMsg = document.getElementById("publish-msg");
+
+        document.getElementById("publish-text").value = title;
+        prefilledImageUrl = null;
+        prefilledFromPrivateResource = true;
+
+        if (type === "image") {
+          const { data, error } = await supabaseClient.storage.from("resources").createSignedUrl(path, 600);
+          if (!error) prefilledImageUrl = data.signedUrl;
+        }
+
+        document.getElementById("publish-box").scrollIntoView({ behavior: "smooth", block: "center" });
+        publishMsg.textContent = "جاهز للنشر — راجع النص ثم اضغط «نشر وتثبيت في تيليجرام».";
+        publishMsg.className = "form-msg show info";
+      });
+    });
+
+    container.querySelectorAll('button[data-action="rename"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const currentTitle = btn.dataset.title;
+        const newTitle = prompt("العنوان الجديد للمصدر:", currentTitle);
+        if (!newTitle || !newTitle.trim() || newTitle.trim() === currentTitle) return;
+        const { error } = await supabaseClient.from("resources").update({ title: newTitle.trim() }).eq("id", id);
+        if (error) { alert("تعذّر تعديل العنوان."); console.error(error); return; }
+        await loadResources();
+      });
+    });
+
+    container.querySelectorAll('button[data-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("حذف هذا المصدر نهائيًا؟ لا يمكن التراجع.")) return;
+        const id = btn.dataset.id;
+        const path = btn.dataset.path;
+
+        const { error: storageError } = await supabaseClient.storage.from("resources").remove([path]);
+        if (storageError) console.error(storageError);
+
+        const { error } = await supabaseClient.from("resources").delete().eq("id", id);
+        if (error) { alert("تعذّر حذف المصدر."); console.error(error); return; }
+        await loadResources();
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+  }
+
+  // ===== إضافة مصدر =====
+  document.getElementById("add-resource-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const titleInput = document.getElementById("res-title");
+    const sectionSelect = document.getElementById("res-section");
+    const typeSelect = document.getElementById("res-type");
+    const fileInput = document.getElementById("res-file");
+    const msgBox = document.getElementById("add-resource-msg");
+    const btn = document.getElementById("add-resource-btn");
+
+    const title = titleInput.value.trim();
+    const sectionId = sectionSelect.value;
+    const type = typeSelect.value;
+    const file = fileInput.files[0];
+
+    msgBox.className = "form-msg";
+
+    if (!sectionId){
+      msgBox.textContent = "أضف قسمًا أولًا قبل رفع مصدر.";
+      msgBox.className = "form-msg show error";
+      return;
+    }
+    if (!file){
+      msgBox.textContent = "اختر ملفًا للرفع.";
+      msgBox.className = "form-msg show error";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "جاري الرفع...";
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const path = `${sectionId}/${Date.now()}_${safeName}`;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from("resources")
+      .upload(path, file);
+
+    if (uploadError){
+      btn.disabled = false;
+      btn.textContent = "إضافة المصدر";
+      msgBox.textContent = "تعذّر رفع الملف. حاول مجددًا.";
+      msgBox.className = "form-msg show error";
+      console.error(uploadError);
+      return;
+    }
+
+    const { error: insertError } = await supabaseClient
+      .from("resources")
+      .insert({
+        title,
+        section_id: sectionId,
+        type,
+        file_url: path
+      });
+
+    btn.disabled = false;
+    btn.textContent = "إضافة المصدر";
+
+    if (insertError){
+      msgBox.textContent = "تم رفع الملف لكن تعذّر حفظ بياناته.";
+      msgBox.className = "form-msg show error";
+      console.error(insertError);
+      return;
+    }
+
+    msgBox.textContent = "تمت إضافة المصدر بنجاح.";
+    msgBox.className = "form-msg show ok";
+    e.target.reset();
+    await loadResources();
+  });
+
+  // ===== النشر العام (تيليجرام + صفحة الأعضاء) =====
+  let prefilledImageUrl = null;
+  let prefilledFromPrivateResource = false;
+
+  document.getElementById("publish-btn").addEventListener("click", async () => {
+    const textEl = document.getElementById("publish-text");
+    const fileEl = document.getElementById("publish-image");
+    const msgBox = document.getElementById("publish-msg");
+    const btn = document.getElementById("publish-btn");
+
+    const text = textEl.value.trim();
+    const file = fileEl.files[0];
+
+    msgBox.className = "form-msg";
+
+    if (!text && !file && !prefilledImageUrl) {
+      msgBox.textContent = "اكتب نصًا أو أرفق صورة قبل النشر.";
+      msgBox.className = "form-msg show error";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "جاري النشر...";
+
+    let imageUrl = prefilledImageUrl;
+    let savedFromPrivate = prefilledFromPrivateResource;
+
+    if (!imageUrl && file) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const path = `${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabaseClient.storage.from("public-posts").upload(path, file);
+      if (uploadError) {
+        btn.disabled = false;
+        btn.textContent = "نشر وتثبيت في تيليجرام";
+        msgBox.textContent = "تعذّر رفع الصورة.";
+        msgBox.className = "form-msg show error";
+        console.error(uploadError);
+        return;
+      }
+      const { data: pub } = supabaseClient.storage.from("public-posts").getPublicUrl(path);
+      imageUrl = pub.publicUrl;
+      savedFromPrivate = false;
+    }
+
+    const { data, error } = await supabaseClient.functions.invoke("publish-telegram", {
+      body: { text, imageUrl },
+    });
+
+    if (error || (data && data.error)) {
+      btn.disabled = false;
+      btn.textContent = "نشر وتثبيت في تيليجرام";
+      msgBox.textContent = "تعذّر النشر. تأكد أن البوت مشرف في المجموعة وله صلاحية تثبيت الرسائل.";
+      msgBox.className = "form-msg show error";
+      console.error(error || data.error);
+      return;
+    }
+
+    // يُحفظ في صفحة الأعضاء فقط إذا لم تكن الصورة من مصدر خاص (غير متاحة للعامة أصلًا)
+    if (!savedFromPrivate) {
+      const { error: postError } = await supabaseClient.from("public_posts").insert({
+        text: text || null,
+        image_url: imageUrl || null,
+      });
+      if (postError) console.error(postError);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "نشر وتثبيت في تيليجرام";
+    msgBox.textContent = savedFromPrivate
+      ? "تم النشر وتثبيت الرسالة في تيليجرام (هذا المصدر خاص ولن يظهر بصفحة الأعضاء)."
+      : "تم النشر في تيليجرام وصفحة الأعضاء.";
+    msgBox.className = "form-msg show ok";
+    textEl.value = "";
+    fileEl.value = "";
+    prefilledImageUrl = null;
+    prefilledFromPrivateResource = false;
+    if (!savedFromPrivate) await loadPublishedPosts();
+  });
+
+  // ===== إدارة المنشورات العامة المنشورة في صفحة الأعضاء =====
+  function extractStoragePath(publicUrl, bucket){
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(publicUrl.substring(idx + marker.length));
+  }
+
+  async function loadPublishedPosts(){
+    const container = document.getElementById("published-posts-list");
+    const { data, error } = await supabaseClient
+      .from("public_posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) { console.error(error); return; }
+
+    if (!data || data.length === 0){
+      container.innerHTML = '<div class="pub-empty">لا توجد منشورات بصفحة الأعضاء بعد.</div>';
+      return;
+    }
+
+    container.innerHTML = '<h4>المنشورات الظاهرة حاليًا بصفحة الأعضاء</h4>';
+    data.forEach(post => {
+      const date = new Date(post.created_at).toLocaleDateString("ar-EG", { day:"numeric", month:"short", year:"numeric" });
+      const preview = post.text ? post.text : (post.image_url ? "(صورة بدون نص)" : "");
+      const row = document.createElement("div");
+      row.className = "pub-post-row";
+      row.innerHTML = `
+        <span class="pub-post-date">${date}</span>
+        <span class="pub-post-text">${escapeHtml(preview)}</span>
+        <button data-post-action="edit" data-id="${post.id}" data-text="${escapeHtml(post.text || "")}">تعديل النص</button>
+        <button data-post-action="delete" data-id="${post.id}" data-image="${post.image_url || ""}">حذف</button>
+      `;
+      container.appendChild(row);
+    });
+
+    container.querySelectorAll('button[data-post-action="edit"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const currentText = btn.dataset.text;
+        const newText = prompt("تعديل نص المنشور:", currentText);
+        if (newText === null || newText.trim() === currentText) return;
+        const { error } = await supabaseClient.from("public_posts").update({ text: newText.trim() || null }).eq("id", id);
+        if (error) { alert("تعذّر تعديل المنشور."); console.error(error); return; }
+        await loadPublishedPosts();
+      });
+    });
+
+    container.querySelectorAll('button[data-post-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("حذف هذا المنشور نهائيًا من صفحة الأعضاء؟")) return;
+        const id = btn.dataset.id;
+        const imageUrl = btn.dataset.image;
+
+        if (imageUrl) {
+          const path = extractStoragePath(imageUrl, "public-posts");
+          if (path) {
+            const { error: storageError } = await supabaseClient.storage.from("public-posts").remove([path]);
+            if (storageError) console.error(storageError);
+          }
+        }
+
+        const { error } = await supabaseClient.from("public_posts").delete().eq("id", id);
+        if (error) { alert("تعذّر حذف المنشور."); console.error(error); return; }
+        await loadPublishedPosts();
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
